@@ -1,0 +1,6 @@
+E:\TeraDataExtractor\TeraDataExtractor\TeraDataExtractor\bin\Debug\TeraDataExtractor.exe.config
+E:\TeraDataExtractor\TeraDataExtractor\TeraDataExtractor\bin\Debug\TeraDataExtractor.exe
+E:\TeraDataExtractor\TeraDataExtractor\TeraDataExtractor\bin\Debug\TeraDataExtractor.pdb
+E:\TeraDataExtractor\TeraDataExtractor\TeraDataExtractor\obj\Debug\TeraDataExtractor.csprojResolveAssemblyReference.cache
+E:\TeraDataExtractor\TeraDataExtractor\TeraDataExtractor\obj\Debug\TeraDataExtractor.exe
+E:\TeraDataExtractor\TeraDataExtractor\TeraDataExtractor\obj\Debug\TeraDataExtractor.pdb
