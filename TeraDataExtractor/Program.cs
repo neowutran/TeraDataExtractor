@@ -9,72 +9,21 @@ using System.Xml.Linq;
 
 namespace TeraDataExtractor
 {
-    internal class Program
+    public class Program
     {
+
+        private Dictionary<int, Zone> _zones = new Dictionary<int, Zone>(); 
+
+
         private static void Main(string[] args)
         {
-            MonsterExtractor();
-            MonsterSeparator();
+            //MonsterExtractor();
+            //MonsterSeparator();
+            var monsterExtractor = new MonsterExtractor();
+
         }
 
-        private static void FindBarakaElementalist()
-        {
-            foreach (var file in Directory.EnumerateFiles(@"E:\TeraDataTools\DataTools\bin\Debug\data\json\SkillData\"))
-            {
-                var skills = new StreamReader(File.OpenRead(file));
-                bool baraka = false, elementalist = false;
-                while (!skills.EndOfStream)
-                {
-                    var line = skills.ReadLine();
-                    if (line == null) continue;
-                    if (line.Contains("Baraka"))
-                    {
-                    }
-                    if (line.Contains("텔레포트"))
-                    {
-                        elementalist = true;
-                        baraka = true;
-
-                    }
-                    if (baraka && elementalist)
-                    {
-                        Console.WriteLine(file);
-                        break;
-                    }
-                }
-            }
-            Console.Read();
-        }
-
-        private static void MonsterSeparator()
-        {
-            var reader = new StreamReader(File.OpenRead("monsters.csv"));
-            var writers = new Dictionary<int, StreamWriter>();
-            while (!reader.EndOfStream)
-            {
-                var line = reader.ReadLine();
-                if (line == null) continue;
-                var values = line.Split(';');
-                var area = Convert.ToInt32(values[0]);
-                var id = Convert.ToInt32(values[1]);
-                var name = values[2];
-
-                if (!writers.ContainsKey(area))
-                {
-                    writers.Add(area, new StreamWriter(area+"-.tsv"));
-                }
-                StreamWriter writer;
-                writers.TryGetValue(area, out writer);
-                writer.WriteLine(id+"\t"+name+"\t"+"false");
-            }
-
-            foreach (var writer in writers)
-            {
-                writer.Value.Flush();
-                writer.Value.Close();
-            }
-        }
-
+   
         private static void SkillSeparator()
         {
                var reader = new StreamReader(File.OpenRead("skills.csv"));
@@ -225,42 +174,6 @@ namespace TeraDataExtractor
 
             }
         }
-
-        private static void MonsterExtractor()
-        {
-            var xml = XDocument.Load("E:/TeraDataTools/DataTools/bin/Debug/data/xml/StrSheet_Creature.xml");
-            List<String> alldata = (from hunting in xml.Root.Elements("HuntingZone") let idzone = hunting.Attribute("id").Value from entity in hunting.Elements("String") let identity = entity.Attribute("templateId").Value let name = entity.Attribute("name").Value where name != "" && identity != "" && idzone != "" select idzone + ";" + identity + ";" + name).ToList();
-
-            using (StreamWriter outputFile = new StreamWriter("monsters.csv"))
-            {
-                foreach (string line in alldata)
-                {
-                    outputFile.WriteLine(line);
-                }
-            }
-        }
-
-        private static void ZoneExtractor()
-        {
-            var xml = XDocument.Load("E:/TeraDataTools/DataTools/bin/Debug/data/xml/StrSheet_ZoneName.xml");
-            List<String> alldata = new List<string>();
-
-            foreach (var skill in xml.Root.Elements("String"))
-            {
-                var id = skill.Attribute("id");
-                var name = skill.Attribute("string");
-                
-                if (name == null || id == null) continue;
-                alldata.Add(id.Value + ";" + name.Value);
-            }
-
-            using (StreamWriter outputFile = new StreamWriter("zones.csv"))
-            {
-                foreach (string line in alldata)
-                {
-                    outputFile.WriteLine(line);
-                }
-            }
-        }
+        
     }
 }
