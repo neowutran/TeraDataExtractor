@@ -19,11 +19,14 @@ namespace TeraDataExtractor
         {
             //MonsterExtractor();
             //MonsterSeparator();
-            var monsterExtractor = new MonsterExtractor();
+            new MonsterExtractor("NA");
+            new MonsterExtractor("EU-EN");
+            new MonsterExtractor("EU-FR");
+
 
         }
 
-   
+
         private static void SkillSeparator()
         {
                var reader = new StreamReader(File.OpenRead("skills.csv"));

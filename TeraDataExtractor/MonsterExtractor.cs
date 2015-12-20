@@ -16,9 +16,12 @@ namespace TeraDataExtractor
     {
 
         private readonly Dictionary<string, Zone> _zones = new Dictionary<string, Zone>();
+        private List<string> battlefields = new List<string>();
+        private string _region;
 
-        public MonsterExtractor()
+        public MonsterExtractor(string region)
         {
+            _region = region;
             ExtractZones();
             BasicMonsterExtractor();
             HpAndIsBossExtract();
@@ -27,7 +30,7 @@ namespace TeraDataExtractor
 
         private void WriteXml()
         {
-            using (var outputFile = new StreamWriter("monsters-EN.xml"))
+            using (var outputFile = new StreamWriter("monsters-"+_region+".xml"))
             {
                 outputFile.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
                 outputFile.WriteLine("<Zones>");
@@ -42,7 +45,7 @@ namespace TeraDataExtractor
                     outputFile.Write("name=\""+zone.Name+"\" ");
                     outputFile.WriteLine(">");
                     foreach (var monster in zone.Monsters)
-                    {
+                    {                      
                         outputFile.Write("<Monster ");
                         outputFile.Write("name=\""+monster.Value.Name+"\" ");
                         outputFile.Write("id=\""+monster.Value.Id+"\" ");
@@ -62,7 +65,9 @@ namespace TeraDataExtractor
         private void ExtractZones()
         {
             DungeonZone();
-            CommonZone();
+            ChannelingZone();
+            BattlefieldZone();
+            /*
             var xml = XDocument.Load("E:/TeraDataTools/DataTools/bin/Debug/data/xml/StrSheet_ZoneName.xml");
             foreach (var zone in xml.Root.Elements("String"))
             {
@@ -73,12 +78,73 @@ namespace TeraDataExtractor
                     continue;
                 }
                 _zones.Add(id.Value, new Zone(id.Value, name.Value));
+            }*/
+        }
+
+        private void BattlefieldZone()
+        {
+            var continentData = XDocument.Load("E:/TeraData/"+_region+"/ContinentData.xml");
+            Dictionary<string, List<string>> continents = new Dictionary<string, List<string>>();
+            foreach (var continent in continentData.Root.Elements("Continent"))
+            {
+                if (continent.Attribute("channelType").Value != "battleField")
+                {
+                    continue;
+                }
+                var id = continent.Attribute("id").Value;
+
+                var huntingZone = continent.Element("HuntingZone");
+                
+                    var huntingZoneId = huntingZone.Attribute("id").Value;
+                    if (!continents.ContainsKey(id))
+                    {
+                        continents.Add(id,new List<string> { huntingZoneId});
+                        continue;
+                    }
+                    continents[id].Add(huntingZoneId);
+                
+            }
+
+            Dictionary<string, string> zoneId = new Dictionary<string, string>();
+            foreach (
+                var file in
+                    Directory.EnumerateFiles(@"E:/TeraData/" + _region + "/Area/"))
+            {
+                var xml = XDocument.Load(file);
+                var continentId = xml.Root.Attribute("continentId").Value;
+                var id = xml.Root.Attribute("nameId").Value;
+                if (zoneId.ContainsKey(id))
+                {
+                    continue;
+                }
+                zoneId.Add(id, continentId);
+            }
+
+            var xml2 = XDocument.Load("E:/TeraData/" + _region + "/StrSheet_Region.xml");
+            foreach (var region in xml2.Root.Elements("String"))
+            {
+                var id = region.Attribute("id").Value;
+                var name = region.Attribute("string").Value;
+                if (!zoneId.ContainsKey(id))
+                {
+                    continue;
+
+                }
+                var continentId = zoneId[id];
+                if (!continents.ContainsKey(continentId)) continue;
+                foreach (var huntingZone in continents[continentId])
+                {
+                    if (_zones.ContainsKey(huntingZone)) continue;
+                    _zones.Add(huntingZone, new Zone(huntingZone, name));
+                    battlefields.Add(huntingZone);
+                }
+
             }
         }
 
-        private void CommonZone()
+        private void ChannelingZone()
         {
-            var continentData = XDocument.Load("E:/TeraDataTools/DataTools/bin/Debug/data/xml/ContinentData.xml");
+            var continentData = XDocument.Load("E:/TeraData/" + _region + "/ContinentData.xml");
             Dictionary<string, List<string>> continents = new Dictionary<string, List<string>>();
             foreach (var continent in continentData.Root.Elements("Continent"))
             {
@@ -105,7 +171,7 @@ namespace TeraDataExtractor
             Dictionary<string, string> zoneId = new Dictionary<string, string>();
             foreach (
                 var file in
-                    Directory.EnumerateFiles(@"E:\TeraDataTools\DataTools\bin\Debug\data\xml\Area\"))
+                    Directory.EnumerateFiles(@"E:/TeraData/" + _region + "/Area/"))
             {
                 var xml = XDocument.Load(file);
                 var continentId = xml.Root.Attribute("continentId").Value;
@@ -116,7 +182,7 @@ namespace TeraDataExtractor
                 }
                 zoneId.Add(id, continentId);
             }
-            var xml2 = XDocument.Load("E:/TeraDataTools/DataTools/bin/Debug/data/xml/StrSheet_Region.xml");
+            var xml2 = XDocument.Load("E:/TeraData/" + _region + "/StrSheet_Region.xml");
             foreach (var region in xml2.Root.Elements("String"))
             {
                 var id = region.Attribute("id").Value;
@@ -141,7 +207,7 @@ namespace TeraDataExtractor
         private void DungeonZone()
         {
 
-            var xml = XDocument.Load("E:/TeraDataTools/DataTools/bin/Debug/data/xml/ContinentData.xml");
+            var xml = XDocument.Load("E:/TeraData/" + _region + "/ContinentData.xml");
             Dictionary<string, string> continents = new Dictionary<string, string>();
             foreach (var continent in xml.Root.Elements("Continent"))
             {
@@ -154,7 +220,7 @@ namespace TeraDataExtractor
                 var huntingZoneId = huntingZone.Attribute("id").Value;
                 continents.Add(id, huntingZoneId);
             }
-            xml = XDocument.Load("E:/TeraDataTools/DataTools/bin/Debug/data/xml/StrSheet_Dungeon/StrSheet_Dungeon-0.xml");
+            xml = XDocument.Load("E:/TeraData/" + _region + "/StrSheet_Dungeon/StrSheet_Dungeon-0.xml");
             foreach (var dungeon in xml.Root.Elements("String"))
             {
                 var id = dungeon.Attribute("id").Value;
@@ -175,7 +241,7 @@ namespace TeraDataExtractor
 
         private void BasicMonsterExtractor()
         {
-            var xml = XDocument.Load("E:/TeraDataTools/DataTools/bin/Debug/data/xml/StrSheet_Creature.xml");
+            var xml = XDocument.Load("E:/TeraData/" + _region + "/StrSheet_Creature.xml");
 
             foreach (var hunting in xml.Root.Elements("HuntingZone"))
             {
@@ -206,7 +272,7 @@ namespace TeraDataExtractor
         {
             foreach (
                 var file in
-                    Directory.EnumerateFiles(@"E:\TeraDataTools\DataTools\bin\Debug\data\xml\NpcData\"))
+                    Directory.EnumerateFiles(@"E:/TeraData/" + _region + "/NpcData/"))
             {
                 var xml = XDocument.Load(file);
                 var huntingZone = xml.Root;
@@ -236,6 +302,7 @@ namespace TeraDataExtractor
                         continue;
                     }
                     zone.Monsters[id].Hp = hp;
+                    if (battlefields.Contains(zoneId)) continue;
                     zone.Monsters[id].IsBoss = isBoss == "true";
                 }
                 
